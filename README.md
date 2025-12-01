@@ -1,6 +1,6 @@
 # neng
 
-neng | The anything engine.
+The anything engine.
 
 ## Failure Propagation
 
