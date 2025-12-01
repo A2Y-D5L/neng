@@ -1,0 +1,224 @@
+/* Header */
+.header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--accent-blue);
+}
+
+.logo h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Connection status */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-pending);
+}
+
+.status-dot.connected {
+    background: var(--status-success);
+    box-shadow: 0 0 8px var(--status-success);
+    animation: pulse 2s infinite;
+}
+
+.status-dot.disconnected {
+    background: var(--status-failed);
+}
+
+.status-dot.connecting {
+    background: var(--accent-orange);
+    animation: connecting-pulse 1s ease-in-out infinite;
+}
+
+@keyframes connecting-pulse {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 0 4px var(--accent-orange);
+    }
+    50% { 
+        opacity: 0.5;
+        box-shadow: 0 0 8px var(--accent-orange);
+    }
+}
+
+/* Connection refresh button */
+.connection-refresh-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-left: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.connection-refresh-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.connection-refresh-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Tab Navigation */
+.header-tabs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tab-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+/* Running indicator on Execution tab */
+.tab-btn.running:not(.active) {
+    border-color: var(--status-running);
+    animation: tab-pulse 2s infinite;
+}
+
+.tab-running-indicator {
+    width: 8px;
+    height: 8px;
+    background: var(--status-running);
+    border-radius: 50%;
+    animation: indicator-pulse 1.5s ease-in-out infinite;
+    margin-left: 4px;
+}
+
+.tab-btn.active .tab-running-indicator {
+    background: white;
+}
+
+@keyframes tab-pulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4);
+    }
+    50% { 
+        box-shadow: 0 0 8px 2px rgba(88, 166, 255, 0.6);
+    }
+}
+
+@keyframes indicator-pulse {
+    0%, 100% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.6;
+        transform: scale(0.85);
+    }
+}
+
+/* Header Running Badge */
+.header-running-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(88, 166, 255, 0.15);
+    border: 1px solid var(--status-running);
+    border-radius: var(--radius-md);
+    margin-right: 0.75rem;
+}
+
+.header-running-badge .running-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--status-running);
+    border-radius: 50%;
+    animation: indicator-pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--status-running);
+}
+
+.header-running-badge .running-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--status-running);
+}
+
+.tab-btn .btn-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}

@@ -1,0 +1,83 @@
+/* Events list */
+.events-panel .panel-content {
+    padding: 0;
+}
+
+.event-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.events-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.events-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.events-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.events-list::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 4px;
+}
+
+.event-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.event-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.event-icon.started { color: var(--status-running); }
+.event-icon.completed { color: var(--status-success); }
+.event-icon.completed.failed { color: var(--status-failed); }
+.event-icon.skipped { color: var(--status-skipped); }
+
+.event-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.event-message {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+
+.event-message strong {
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+.event-message .error {
+    color: var(--status-failed);
+}
+
+.event-time {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    margin-top: 0.25rem;
+}

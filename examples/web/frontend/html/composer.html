@@ -1,0 +1,84 @@
+<!--
+    Plan Composer Tab Component
+    ===========================
+    Contains: Target selection grid, plan preview, and run configuration.
+    Used in: index.html (within #composerTab)
+-->
+<div class="tab-content active" id="composerTab">
+    <div class="composer-layout">
+        <!-- Available Targets Panel -->
+        <div class="panel composer-panel">
+            <div class="panel-header">
+                <h2>Available Targets</h2>
+                <div class="panel-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="selectAllTargets()">Select All</button>
+                    <button class="btn btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="targets-grid" id="availableTargets">
+                    <div class="loading-state">Loading targets...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Preview Panel -->
+        <div class="panel preview-panel">
+            <div class="panel-header">
+                <h2>Plan Preview</h2>
+                <span class="selected-count" id="selectedCount">0 targets selected</span>
+            </div>
+            <div class="panel-content">
+                <div class="preview-stages" id="previewStages">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p>Select targets to preview the execution plan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Run Configuration Panel -->
+        <div class="panel config-panel">
+            <div class="panel-header">
+                <h2>Run Configuration</h2>
+            </div>
+            <div class="panel-content">
+                <div class="config-section">
+                    <label class="config-label">Root Target(s)</label>
+                    <p class="config-help">Select which target(s) to execute. Dependencies will be run automatically.</p>
+                    <div class="root-selector" id="rootSelector">
+                        <div class="empty-hint">Select targets first</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <label class="config-label">Simulate Failures</label>
+                    <p class="config-help">Select targets that should fail during execution.</p>
+                    <div class="fail-selector" id="failSelector">
+                        <div class="empty-hint">Select targets first</div>
+                    </div>
+                </div>
+
+                <div class="config-actions">
+                    <button class="btn btn-primary btn-lg" id="runCustomBtn" onclick="runCustomPlan()" disabled>
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Run Plan
+                    </button>
+                    <button class="btn btn-secondary btn-lg" id="saveCustomBtn" onclick="savePlan()" disabled>
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17,21 17,13 7,13 7,21"/>
+                            <polyline points="7,3 7,8 15,8"/>
+                        </svg>
+                        Save Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

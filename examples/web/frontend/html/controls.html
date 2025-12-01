@@ -1,0 +1,56 @@
+<!--
+    Controls Component
+    ==================
+    Contains: Run/Cancel/Clear buttons and real-time run statistics.
+    Used in: index.html (within #executionTab)
+-->
+<div class="controls-panel">
+    <div class="controls">
+        <button class="btn btn-primary" id="runBtn" onclick="startRun(false)">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+            Run All (Demo)
+        </button>
+        <button class="btn btn-warning" id="runFailBtn" onclick="startRun(true)">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            Demo with Failure
+        </button>
+        <button class="btn btn-danger" id="cancelBtn" onclick="cancelRun()" disabled>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 6h12v12H6z"/>
+            </svg>
+            Cancel
+        </button>
+        <button class="btn btn-secondary" id="clearBtn" onclick="clearDashboard()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            Clear
+        </button>
+    </div>
+    <div class="run-stats" id="runStats">
+        <div class="stat">
+            <span class="stat-label">Total</span>
+            <span class="stat-value" id="statTotal">0</span>
+        </div>
+        <div class="stat stat-running">
+            <span class="stat-label">Running</span>
+            <span class="stat-value" id="statRunning">0</span>
+        </div>
+        <div class="stat stat-success">
+            <span class="stat-label">Passed</span>
+            <span class="stat-value" id="statPassed">0</span>
+        </div>
+        <div class="stat stat-failed">
+            <span class="stat-label">Failed</span>
+            <span class="stat-value" id="statFailed">0</span>
+        </div>
+        <div class="stat stat-skipped">
+            <span class="stat-label">Skipped</span>
+            <span class="stat-value" id="statSkipped">0</span>
+        </div>
+    </div>
+</div>

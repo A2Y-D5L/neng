@@ -1,0 +1,43 @@
+<!--
+    Pipeline Component
+    ==================
+    Contains: Pipeline graph visualization and event log panels.
+    Used in: index.html (within #executionTab)
+-->
+<div class="dashboard">
+    <!-- Pipeline Graph Panel -->
+    <div class="panel pipeline-panel">
+        <div class="panel-header">
+            <h2>Pipeline Graph</h2>
+            <div class="panel-badge" id="pipelineStatus">Idle</div>
+        </div>
+        <div class="panel-content">
+            <div class="stages-container" id="stagesContainer">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8"/>
+                    </svg>
+                    <p>Start a pipeline run to see the execution graph</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Log Panel -->
+    <div class="panel events-panel">
+        <div class="panel-header">
+            <h2>Event Log</h2>
+            <span class="event-count" id="eventCount">0 events</span>
+        </div>
+        <div class="panel-content">
+            <div class="events-list" id="eventsList">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p>Events will appear here during pipeline execution</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

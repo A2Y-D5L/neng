@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI Pipeline Dashboard</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div class="app">
+        <!-- ============================================
+             HEADER COMPONENT
+             See: /static/html/header.html for template
+             ============================================ -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    <h1>CI Pipeline Dashboard</h1>
+                </div>
+                <div class="header-tabs">
+                    <button class="tab-btn active" data-tab="composer" onclick="switchTab('composer')">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Plan Composer
+                    </button>
+                    <button class="tab-btn" data-tab="execution" onclick="switchTab('execution')">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Execution
+                    </button>
+                </div>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+            </div>
+        </header>
+        <!-- END HEADER COMPONENT -->
+
+        <main class="main">
+            <!-- ============================================
+                 COMPOSER TAB COMPONENT
+                 See: /static/html/composer.html for template
+                 ============================================ -->
+            <div class="tab-content active" id="composerTab">
+                <div class="composer-layout">
+                    <div class="panel composer-panel">
+                        <div class="panel-header">
+                            <h2>Available Targets</h2>
+                            <div class="panel-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="selectAllTargets()">Select All</button>
+                                <button class="btn btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="targets-grid" id="availableTargets">
+                                <div class="loading-state">Loading targets...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel preview-panel">
+                        <div class="panel-header">
+                            <h2>Plan Preview</h2>
+                            <span class="selected-count" id="selectedCount">0 targets selected</span>
+                        </div>
+                        <div class="panel-content">
+                            <div class="preview-stages" id="previewStages">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p>Select targets to preview the execution plan</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel config-panel">
+                        <div class="panel-header">
+                            <h2>Run Configuration</h2>
+                        </div>
+                        <div class="panel-content">
+                            <div class="config-section">
+                                <label class="config-label">Root Target(s)</label>
+                                <p class="config-help">Select which target(s) to execute. Dependencies will be run automatically.</p>
+                                <div class="root-selector" id="rootSelector">
+                                    <div class="empty-hint">Select targets first</div>
+                                </div>
+                            </div>
+
+                            <div class="config-section">
+                                <label class="config-label">Simulate Failures</label>
+                                <p class="config-help">Select targets that should fail during execution.</p>
+                                <div class="fail-selector" id="failSelector">
+                                    <div class="empty-hint">Select targets first</div>
+                                </div>
+                            </div>
+
+                            <div class="config-actions">
+                                <button class="btn btn-primary btn-lg" id="runCustomBtn" onclick="runCustomPlan()" disabled>
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    Run Plan
+                                </button>
+                                <button class="btn btn-secondary btn-lg" id="saveCustomBtn" onclick="savePlan()" disabled>
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                        <polyline points="17,21 17,13 7,13 7,21"/>
+                                        <polyline points="7,3 7,8 15,8"/>
+                                    </svg>
+                                    Save Plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- END COMPOSER TAB COMPONENT -->
+
+            <!-- ============================================
+                 EXECUTION TAB COMPONENT
+                 Contains: Plans, Controls, Pipeline, Summary
+                 ============================================ -->
+            <div class="tab-content" id="executionTab">
+
+                <!-- ========================================
+                     SAVED PLANS COMPONENT
+                     See: /static/html/plans.html for template
+                     ======================================== -->
+                <div class="saved-plans-section">
+                    <div class="panel saved-plans-panel">
+                        <div class="panel-header">
+                            <h2>Saved Plans</h2>
+                            <button class="btn btn-sm btn-secondary" onclick="planRunner.refreshPlans()">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="panel-content">
+                            <div class="saved-plans-list" id="savedPlansList">
+                                <div class="loading-state">Loading plans...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel plan-details-panel" id="planDetailsPanel" style="display: none;">
+                        <div class="panel-header">
+                            <h2 id="selectedPlanName">Plan Details</h2>
+                            <button class="btn btn-sm btn-secondary" onclick="planRunner.closePlanDetails()">✕ Close</button>
+                        </div>
+                        <div class="panel-content">
+                            <div class="plan-description" id="selectedPlanDescription"></div>
+                            
+                            <div class="plan-run-options">
+                                <div class="run-option-section">
+                                    <label class="config-label">Run Mode</label>
+                                    <div class="run-mode-selector">
+                                        <button class="mode-btn active" data-mode="all" onclick="planRunner.setRunMode('all')">
+                                            Run All
+                                        </button>
+                                        <button class="mode-btn" data-mode="target" onclick="planRunner.setRunMode('target')">
+                                            Run Target
+                                        </button>
+                                        <button class="mode-btn" data-mode="stage" onclick="planRunner.setRunMode('stage')">
+                                            Run Stage
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="target-stage-selector" id="targetStageSelector" style="display: none;">
+                                    <label class="config-label" id="selectorLabel">Select Target</label>
+                                    <div class="selector-options" id="selectorOptions"></div>
+                                </div>
+
+                                <div class="fail-targets-section">
+                                    <label class="config-label">Simulate Failures (optional)</label>
+                                    <div class="fail-selector" id="planFailSelector">
+                                        <div class="empty-hint">No targets can fail</div>
+                                    </div>
+                                </div>
+
+                                <div class="plan-stages-preview">
+                                    <label class="config-label">Plan Stages</label>
+                                    <div class="stages-preview" id="planStagesPreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="plan-actions">
+                                <button class="btn btn-primary btn-lg" id="runFromPlanBtn" onclick="planRunner.runSelectedPlan(window.dashboard)">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    Run Plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END SAVED PLANS COMPONENT -->
+
+                <!-- ========================================
+                     CONTROLS COMPONENT
+                     See: /static/html/controls.html for template
+                     ======================================== -->
+                <div class="controls-panel">
+                    <div class="controls">
+                        <button class="btn btn-primary" id="runBtn" onclick="startRun(false)">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            Run All (Demo)
+                        </button>
+                        <button class="btn btn-warning" id="runFailBtn" onclick="startRun(true)">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Demo with Failure
+                        </button>
+                        <button class="btn btn-danger" id="cancelBtn" onclick="cancelRun()" disabled>
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 6h12v12H6z"/>
+                            </svg>
+                            Cancel
+                        </button>
+                        <button class="btn btn-secondary" id="clearBtn" onclick="clearDashboard()">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+                    <div class="run-stats" id="runStats">
+                        <div class="stat">
+                            <span class="stat-label">Total</span>
+                            <span class="stat-value" id="statTotal">0</span>
+                        </div>
+                        <div class="stat stat-running">
+                            <span class="stat-label">Running</span>
+                            <span class="stat-value" id="statRunning">0</span>
+                        </div>
+                        <div class="stat stat-success">
+                            <span class="stat-label">Passed</span>
+                            <span class="stat-value" id="statPassed">0</span>
+                        </div>
+                        <div class="stat stat-failed">
+                            <span class="stat-label">Failed</span>
+                            <span class="stat-value" id="statFailed">0</span>
+                        </div>
+                        <div class="stat stat-skipped">
+                            <span class="stat-label">Skipped</span>
+                            <span class="stat-value" id="statSkipped">0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- END CONTROLS COMPONENT -->
+
+                <!-- ========================================
+                     PIPELINE COMPONENT
+                     See: /static/html/pipeline.html for template
+                     ======================================== -->
+                <div class="dashboard">
+                    <div class="panel pipeline-panel">
+                        <div class="panel-header">
+                            <h2>Pipeline Graph</h2>
+                            <div class="panel-badge" id="pipelineStatus">Idle</div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="stages-container" id="stagesContainer">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M9 17H7A5 5 0 017 7h2M15 7h2a5 5 0 010 10h-2M8 12h8"/>
+                                    </svg>
+                                    <p>Start a pipeline run to see the execution graph</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel events-panel">
+                        <div class="panel-header">
+                            <h2>Event Log</h2>
+                            <span class="event-count" id="eventCount">0 events</span>
+                        </div>
+                        <div class="panel-content">
+                            <div class="events-list" id="eventsList">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <p>Events will appear here during pipeline execution</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END PIPELINE COMPONENT -->
+
+                <!-- ========================================
+                     SUMMARY COMPONENT
+                     See: /static/html/summary.html for template
+                     ======================================== -->
+                <div class="summary-panel" id="summaryPanel" style="display: none;">
+                    <div class="panel-header">
+                        <h2>Run Summary</h2>
+                        <div class="summary-status" id="summaryStatus"></div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="summary-stats" id="summaryStats"></div>
+                        <div class="summary-details" id="summaryDetails"></div>
+                    </div>
+                </div>
+                <!-- END SUMMARY COMPONENT -->
+
+            </div>
+            <!-- END EXECUTION TAB COMPONENT -->
+        </main>
+
+        <!-- ============================================
+             MODAL COMPONENT
+             See: /static/html/modal.html for template
+             ============================================ -->
+        <div class="modal-overlay" id="savePlanModal" style="display: none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Save Plan</h3>
+                    <button class="btn-close" onclick="closeSavePlanModal()">✕</button>
+                </div>
+                <div class="modal-content">
+                    <div class="form-group">
+                        <label class="config-label" for="planName">Plan Name <span class="required">*</span></label>
+                        <input type="text" id="planName" class="input" placeholder="e.g., My Custom Pipeline" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label class="config-label" for="planDescription">Description</label>
+                        <textarea id="planDescription" class="input textarea" placeholder="Describe what this plan does..." rows="3" maxlength="200"></textarea>
+                    </div>
+                    <div class="plan-preview-mini">
+                        <label class="config-label">Plan Preview</label>
+                        <div class="preview-content" id="savePlanPreview"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeSavePlanModal()">Cancel</button>
+                    <button class="btn btn-primary" id="confirmSaveBtn" onclick="confirmSavePlan()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17,21 17,13 7,13 7,21"/>
+                            <polyline points="7,3 7,8 15,8"/>
+                        </svg>
+                        Save Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- END MODAL COMPONENT -->
+
+        <!-- ============================================
+             FOOTER COMPONENT
+             See: /static/html/footer.html for template
+             ============================================ -->
+        <footer class="footer">
+            <p>CI Engine Dashboard • Real-time pipeline visualization</p>
+        </footer>
+        <!-- END FOOTER COMPONENT -->
+    </div>
+
+    <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

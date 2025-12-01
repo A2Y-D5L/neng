@@ -1,0 +1,79 @@
+<!--
+    Saved Plans Component
+    =====================
+    Contains: List of saved plans and plan details panel.
+    Used in: index.html (within #executionTab)
+-->
+<div class="saved-plans-section">
+    <!-- Plans List Panel -->
+    <div class="panel saved-plans-panel">
+        <div class="panel-header">
+            <h2>Saved Plans</h2>
+            <button class="btn btn-sm btn-secondary" onclick="planRunner.refreshPlans()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                </svg>
+                Refresh
+            </button>
+        </div>
+        <div class="panel-content">
+            <div class="saved-plans-list" id="savedPlansList">
+                <div class="loading-state">Loading plans...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Details Panel -->
+    <div class="panel plan-details-panel" id="planDetailsPanel" style="display: none;">
+        <div class="panel-header">
+            <h2 id="selectedPlanName">Plan Details</h2>
+            <button class="btn btn-sm btn-secondary" onclick="planRunner.closePlanDetails()">✕ Close</button>
+        </div>
+        <div class="panel-content">
+            <div class="plan-description" id="selectedPlanDescription"></div>
+            
+            <div class="plan-run-options">
+                <div class="run-option-section">
+                    <label class="config-label">Run Mode</label>
+                    <div class="run-mode-selector">
+                        <button class="mode-btn active" data-mode="all" onclick="planRunner.setRunMode('all')">
+                            Run All
+                        </button>
+                        <button class="mode-btn" data-mode="target" onclick="planRunner.setRunMode('target')">
+                            Run Target
+                        </button>
+                        <button class="mode-btn" data-mode="stage" onclick="planRunner.setRunMode('stage')">
+                            Run Stage
+                        </button>
+                    </div>
+                </div>
+
+                <div class="target-stage-selector" id="targetStageSelector" style="display: none;">
+                    <label class="config-label" id="selectorLabel">Select Target</label>
+                    <div class="selector-options" id="selectorOptions"></div>
+                </div>
+
+                <div class="fail-targets-section">
+                    <label class="config-label">Simulate Failures (optional)</label>
+                    <div class="fail-selector" id="planFailSelector">
+                        <div class="empty-hint">No targets can fail</div>
+                    </div>
+                </div>
+
+                <div class="plan-stages-preview">
+                    <label class="config-label">Plan Stages</label>
+                    <div class="stages-preview" id="planStagesPreview"></div>
+                </div>
+            </div>
+
+            <div class="plan-actions">
+                <button class="btn btn-primary btn-lg" id="runFromPlanBtn" onclick="planRunner.runSelectedPlan()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Run Plan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

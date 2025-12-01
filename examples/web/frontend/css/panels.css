@@ -1,0 +1,90 @@
+/* Panels */
+.panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.panel-badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.panel-badge.running {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--status-running);
+    border-color: rgba(88, 166, 255, 0.3);
+}
+
+.panel-badge.success {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--status-success);
+    border-color: rgba(63, 185, 80, 0.3);
+}
+
+.panel-badge.failed {
+    background: rgba(248, 81, 73, 0.15);
+    color: var(--status-failed);
+    border-color: rgba(248, 81, 73, 0.3);
+}
+
+.panel-content {
+    padding: 1.25rem;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Loading state */
+.loading-state {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 2rem;
+    text-align: center;
+}
