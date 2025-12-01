@@ -48,11 +48,11 @@ func StreamingTarget(
 	name, desc string,
 	deps []string,
 	work StreamingWork,
-) (neng.Target, <-chan []byte) {
+) (neng.Task, <-chan []byte) {
 	chunks := make(chan []byte, 64) // Buffered to reduce blocking
 	var closeOnce sync.Once
 
-	target := neng.Target{
+	target := neng.Task{
 		Name: name,
 		Desc: desc,
 		Deps: deps,
@@ -88,11 +88,11 @@ func BlockingStreamingTarget(
 	name, desc string,
 	deps []string,
 	work StreamingWork,
-) (neng.Target, <-chan []byte) {
+) (neng.Task, <-chan []byte) {
 	chunks := make(chan []byte, 64)
 	var closeOnce sync.Once
 
-	target := neng.Target{
+	target := neng.Task{
 		Name: name,
 		Desc: desc,
 		Deps: deps,

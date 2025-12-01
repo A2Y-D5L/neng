@@ -24,8 +24,8 @@ func WithMaxWorkers(n int) ExecutorOption {
 
 // WithFailFast stops scheduling new work after the first failure.
 //
-// Already-running targets are allowed to complete; all remaining pending
-// targets that depend (directly or transitively) on a failed target are
+// Already-running tasks are allowed to complete; all remaining pending
+// tasks that depend (directly or transitively) on a failed task are
 // marked as skipped.
 func WithFailFast() ExecutorOption {
 	return func(e *Executor) {
@@ -42,20 +42,20 @@ func WithEventSink(sink EventHandler) ExecutorOption {
 	}
 }
 
-// WithCollectAllErrors configures the executor to return all target errors
+// WithCollectAllErrors configures the executor to return all task errors
 // as a combined error using errors.Join, rather than just the first error.
 //
 // This is useful when multiple independent branches can fail, and you want
 // to see all failures rather than just the first one encountered.
 //
-// The errors are joined in deterministic order (sorted by target name)
+// The errors are joined in deterministic order (sorted by task name)
 // to ensure reproducible error messages for testing.
 //
 // Example:
 //
 //	exec := NewExecutor(plan, WithCollectAllErrors())
 //	_, err := exec.Run(ctx)
-//	// err contains all failures: "target \"A\": ...\ntarget \"B\": ..."
+//	// err contains all failures: "task \"A\": ...\ntask \"B\": ..."
 func WithCollectAllErrors() ExecutorOption {
 	return func(e *Executor) {
 		e.collectAllErrors = true
@@ -64,10 +64,10 @@ func WithCollectAllErrors() ExecutorOption {
 
 // RunSummary is the top-level result of an Executor run.
 type RunSummary struct {
-	// Results contains a Result for every *reachable* target.
+	// Results contains a Result for every *reachable* task.
 	Results map[string]Result
 
-	// Failed is true if at least one reachable target failed.
+	// Failed is true if at least one reachable task failed.
 	Failed bool
 }
 
@@ -81,7 +81,7 @@ type Executor struct {
 	// logf       Logger
 	failFast bool
 
-	// collectAllErrors, when true, causes Run to return all target errors
+	// collectAllErrors, when true, causes Run to return all task errors
 	// joined via errors.Join instead of just the first error.
 	collectAllErrors bool
 
@@ -102,7 +102,7 @@ func NewExecutor(plan *Plan, opts ...ExecutorOption) *Executor {
 	e := &Executor{
 		plan:       plan,
 		maxWorkers: runtime.NumCPU(),
-		// logf:       log.Printf,
+
 		// small default buffers; callers should consume promptly, but
 		// emit() is non-blocking to avoid deadlocks.
 		events:  make(chan Event, 128),
@@ -117,7 +117,7 @@ func NewExecutor(plan *Plan, opts ...ExecutorOption) *Executor {
 	return e
 }
 
-// Events returns a read-only channel of target lifecycle events.
+// Events returns a read-only channel of task lifecycle events.
 //
 // The channel is closed when Run completes.
 func (e *Executor) Events() <-chan Event {
@@ -132,12 +132,12 @@ func (e *Executor) Results() <-chan Result {
 	return e.results
 }
 
-// Run executes the plan for the given root targets.
+// Run executes the plan for the given root tasks.
 //
-// roots is the set of target names whose transitive dependencies will be
+// roots is the set of task names whose transitive dependencies will be
 // considered reachable. If roots is empty, the entire plan is executed.
 //
-// The returned RunSummary only includes results for reachable targets.
+// The returned RunSummary only includes results for reachable tasks.
 //
 // NOTE: An Executor instance is intended for a single Run call.
 func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error) {
@@ -150,13 +150,13 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 		return RunSummary{}, err
 	}
 	if reachableCount == 0 {
-		return RunSummary{}, errors.New("executor run: no reachable targets")
+		return RunSummary{}, errors.New("executor run: no reachable tasks")
 	}
 
-	n := len(e.plan.targets)
+	n := len(e.plan.tasks)
 
 	remainingDeps := make([]int, n)
-	status := make([]targetStatus, n)
+	status := make([]taskStatus, n)
 	results := make([]Result, n)
 
 	for i := range n {
@@ -168,7 +168,7 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 		remainingDeps[i] = len(e.plan.deps[i])
 
 		status[i] = statusPending
-		results[i] = Result{Name: e.plan.targets[i].Name}
+		results[i] = Result{Name: e.plan.tasks[i].Name}
 	}
 
 	readyCh := make(chan int)
@@ -198,9 +198,9 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 			status[i] = statusRunning
 
 			e.emit(Event{
-				Type:   EventTargetStarted,
+				Type:   EventTaskStarted,
 				Time:   results[i].StartedAt,
-				Target: e.plan.targets[i],
+				Task:   e.plan.tasks[i],
 				Result: nil,
 			})
 
@@ -229,9 +229,9 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 					completed++
 
 					e.emit(Event{
-						Type:   EventTargetSkipped,
+						Type:   EventTaskSkipped,
 						Time:   results[i].CompletedAt,
-						Target: e.plan.targets[i],
+						Task:   e.plan.tasks[i],
 						Result: &results[i],
 					})
 				}
@@ -240,11 +240,11 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 
 		case td := <-doneCh:
 			i := td.index
-			t := e.plan.targets[i]
+			t := e.plan.tasks[i]
 
 			if td.err != nil && !errors.Is(td.err, context.Canceled) {
-				// Hard failure from target.
-				// e.logf("target %s failed: %v", t.Name, td.err)
+				// Hard failure from task.
+				// e.logf("task %s failed: %v", t.Name, td.err)
 				status[i] = statusFailed
 				results[i].Err = td.err
 				results[i].CompletedAt = time.Now()
@@ -254,9 +254,9 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 
 				// Emit completed event with error.
 				e.emit(Event{
-					Type:   EventTargetCompleted,
+					Type:   EventTaskCompleted,
 					Time:   results[i].CompletedAt,
-					Target: t,
+					Task:   t,
 					Result: &results[i],
 				})
 
@@ -279,9 +279,9 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 				completed++
 
 				e.emit(Event{
-					Type:   EventTargetCompleted,
+					Type:   EventTaskCompleted,
 					Time:   results[i].CompletedAt,
-					Target: t,
+					Task:   t,
 					Result: &results[i],
 				})
 			}
@@ -300,14 +300,14 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 					status[depIdx] = statusRunning
 
 					e.emit(Event{
-						Type:   EventTargetStarted,
+						Type:   EventTaskStarted,
 						Time:   results[depIdx].StartedAt,
-						Target: e.plan.targets[depIdx],
+						Task:   e.plan.tasks[depIdx],
 						Result: nil,
 					})
 
 					// Again, we don't gate scheduling on ctx here; workers
-					// will check ctx before running the target body.
+					// will check ctx before running the task body.
 					readyCh <- depIdx
 				}
 			}
@@ -332,14 +332,14 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 		if !reachable[i] {
 			continue
 		}
-		summary.Results[e.plan.targets[i].Name] = results[i]
+		summary.Results[e.plan.tasks[i].Name] = results[i]
 	}
 
 	if err := e.collectErrors(&summary); err != nil {
 		return summary, err
 	}
 
-	// If context was canceled but no target returned an error,
+	// If context was canceled but no task returned an error,
 	// propagate ctx.Err() so callers can distinguish.
 	if err := ctx.Err(); err != nil {
 		return summary, err
@@ -352,7 +352,7 @@ func (e *Executor) Run(ctx context.Context, roots ...string) (RunSummary, error)
 //
 // If roots is empty, all nodes are reachable.
 func (e *Executor) computeReachable(roots []string) ([]bool, int, error) {
-	n := len(e.plan.targets)
+	n := len(e.plan.tasks)
 	reachable := make([]bool, n)
 
 	// If no roots specified, everything is reachable.
@@ -368,7 +368,7 @@ func (e *Executor) computeReachable(roots []string) ([]bool, int, error) {
 	for _, name := range roots {
 		idx, ok := e.plan.indexByName[name]
 		if !ok {
-			return nil, 0, fmt.Errorf("executor run: unknown root target %q", name)
+			return nil, 0, fmt.Errorf("executor run: unknown root task %q", name)
 		}
 		rootIdx = append(rootIdx, idx)
 	}
@@ -415,14 +415,14 @@ type taskDone struct {
 	err   error
 }
 
-// worker executes targets sent on readyCh and reports completion on doneCh.
+// worker executes tasks sent on readyCh and reports completion on doneCh.
 func (e *Executor) worker(
 	ctx context.Context,
 	readyCh <-chan int,
 	doneCh chan<- taskDone,
 ) {
 	for idx := range readyCh {
-		t := e.plan.targets[idx]
+		t := e.plan.tasks[idx]
 
 		select {
 		case <-ctx.Done():
@@ -472,24 +472,24 @@ func (e *Executor) emit(ev Event) {
 	}
 }
 
-// skipTransitiveDependents marks all transitive dependents of a failed target as skipped.
+// skipTransitiveDependents marks all transitive dependents of a failed task as skipped.
 //
-// When a target fails, its dependents cannot run (their dependency is unsatisfied).
-// This function performs a BFS traversal from the failed target through plan.dependents,
-// marking each reachable pending target as skipped and emitting EventTargetSkipped.
+// When a task fails, its dependents cannot run (their dependency is unsatisfied).
+// This function performs a BFS traversal from the failed task through plan.dependents,
+// marking each reachable pending task as skipped and emitting EventTaskSkipped.
 //
-// This ensures RunSummary provides a complete view of execution—no targets remain
+// This ensures RunSummary provides a complete view of execution—no tasks remain
 // in an ambiguous pending state.
 //
 // Parameters:
-//   - failedIdx: Index of the failed target in plan.targets
-//   - status: Slice tracking target status (statusPending, statusRunning, etc.)
+//   - failedIdx: Index of the failed task in plan.tasks
+//   - status: Slice tracking task status (statusPending, statusRunning, etc.)
 //   - results: Slice of Result structs to update with skip information
-//   - reachable: Slice indicating which targets are reachable from roots
+//   - reachable: Slice indicating which tasks are reachable from roots
 //   - completed: Pointer to completed counter for termination detection
 func (e *Executor) skipTransitiveDependents(
 	failedIdx int,
-	status []targetStatus,
+	status []taskStatus,
 	results []Result,
 	reachable []bool,
 	completed *int,
@@ -497,7 +497,7 @@ func (e *Executor) skipTransitiveDependents(
 	visited := make(map[int]bool)
 	queue := make([]int, 0, len(e.plan.dependents[failedIdx]))
 
-	// Seed queue with direct dependents of the failed target
+	// Seed queue with direct dependents of the failed task
 	for _, idx := range e.plan.dependents[failedIdx] {
 		if reachable[idx] && status[idx] == statusPending && !visited[idx] {
 			queue = append(queue, idx)
@@ -522,13 +522,13 @@ func (e *Executor) skipTransitiveDependents(
 
 		// Emit skip event
 		e.emit(Event{
-			Type:   EventTargetSkipped,
+			Type:   EventTaskSkipped,
 			Time:   results[idx].CompletedAt,
-			Target: e.plan.targets[idx],
+			Task:   e.plan.tasks[idx],
 			Result: &results[idx],
 		})
 
-		// Queue dependents of this now-skipped target (transitive propagation)
+		// Queue dependents of this now-skipped task (transitive propagation)
 		for _, depIdx := range e.plan.dependents[idx] {
 			if reachable[depIdx] && status[depIdx] == statusPending && !visited[depIdx] {
 				queue = append(queue, depIdx)
@@ -545,7 +545,7 @@ func (e *Executor) collectErrors(summary *RunSummary) error {
 		return e.firstErr
 	}
 
-	// Collect all failed target names
+	// Collect all failed task names
 	var failedNames []string
 	for name, res := range summary.Results {
 		if res.Err != nil {
@@ -564,7 +564,7 @@ func (e *Executor) collectErrors(summary *RunSummary) error {
 	errs := make([]error, 0, len(failedNames))
 	for _, name := range failedNames {
 		res := summary.Results[name]
-		errs = append(errs, fmt.Errorf("target %q: %w", name, res.Err))
+		errs = append(errs, fmt.Errorf("task %q: %w", name, res.Err))
 	}
 
 	return errors.Join(errs...)

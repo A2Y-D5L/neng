@@ -12,7 +12,7 @@ import (
 )
 
 func TestWithTimeout_CompletesBeforeTimeout(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "fast",
 		Run: func(_ context.Context) error {
 			time.Sleep(10 * time.Millisecond)
@@ -29,7 +29,7 @@ func TestWithTimeout_CompletesBeforeTimeout(t *testing.T) {
 }
 
 func TestWithTimeout_ExceedsTimeout(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "slow",
 		Run: func(ctx context.Context) error {
 			select {
@@ -50,7 +50,7 @@ func TestWithTimeout_ExceedsTimeout(t *testing.T) {
 }
 
 func TestWithTimeout_ZeroIsNoOp(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			if _, ok := ctx.Deadline(); ok {
@@ -69,7 +69,7 @@ func TestWithTimeout_ZeroIsNoOp(t *testing.T) {
 }
 
 func TestWithTimeout_NegativeIsNoOp(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			if _, ok := ctx.Deadline(); ok {
@@ -88,7 +88,7 @@ func TestWithTimeout_NegativeIsNoOp(t *testing.T) {
 }
 
 func TestWithTimeout_RespectsParentContext(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			<-ctx.Done()
@@ -112,7 +112,7 @@ func TestWithTimeout_RespectsParentContext(t *testing.T) {
 }
 
 func TestWithTimeout_PreservesTargetMetadata(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "original",
 		Desc: "Original description",
 		Deps: []string{"dep1", "dep2"},
@@ -134,7 +134,7 @@ func TestWithTimeout_PreservesTargetMetadata(t *testing.T) {
 
 func TestWithTimeout_PropagatesError(t *testing.T) {
 	expectedErr := errors.New("target error")
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			return expectedErr
@@ -153,7 +153,7 @@ func TestWithTimeout_PropagatesError(t *testing.T) {
 
 func TestComposition_RetryWithTimeout(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "flaky",
 		Run: func(ctx context.Context) error {
 			n := atomic.AddInt32(&attempts, 1)
@@ -196,7 +196,7 @@ func TestComposition_TimeoutWithRetry_PerAttemptTimeout(t *testing.T) {
 	var attempts int32
 	var attemptTimes []time.Duration
 
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			start := time.Now()
@@ -242,7 +242,7 @@ func TestComposition_TimeoutWithRetry_PerAttemptTimeout(t *testing.T) {
 
 func TestComposition_DoubleWrap(t *testing.T) {
 	// Test wrapping WithTimeout twice (outer should take precedence if shorter)
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			<-ctx.Done()

@@ -15,20 +15,20 @@ type loggingSink struct{}
 
 func (loggingSink) HandleEvent(ev engine.Event) {
 	name := "<nil>"
-	if ev.Target != nil {
-		name = ev.Target.Name
+	if ev.Task != nil {
+		name = ev.Task.Name
 	}
 
 	switch ev.Type {
-	case engine.EventTargetStarted:
+	case engine.EventTaskStarted:
 		fmt.Printf("[event] %s STARTED at %s\n", name, ev.Time.Format(time.RFC3339Nano))
-	case engine.EventTargetCompleted:
+	case engine.EventTaskCompleted:
 		status := "ok"
 		if ev.Result != nil && ev.Result.Err != nil {
 			status = "failed"
 		}
 		fmt.Printf("[event] %s COMPLETED (%s) at %s\n", name, status, ev.Time.Format(time.RFC3339Nano))
-	case engine.EventTargetSkipped:
+	case engine.EventTaskSkipped:
 		fmt.Printf("[event] %s SKIPPED at %s\n", name, ev.Time.Format(time.RFC3339Nano))
 	default:
 		fmt.Printf("[event] %s UNKNOWN event at %s\n", name, ev.Time.Format(time.RFC3339Nano))
@@ -37,21 +37,21 @@ func (loggingSink) HandleEvent(ev engine.Event) {
 
 func createPlan() *engine.Plan {
 	plan, err := engine.BuildPlan(
-		engine.Target{
+		engine.Task{
 			Name: "lint",
 			Desc: "Run linters",
 			Run: func(_ context.Context) error {
 				time.Sleep(300 * time.Millisecond)
 				return nil
 			}},
-		engine.Target{
+		engine.Task{
 			Name: "test",
 			Desc: "Run unit tests",
 			Run: func(_ context.Context) error {
 				time.Sleep(500 * time.Millisecond)
 				return nil
 			}},
-		engine.Target{
+		engine.Task{
 			Name: "build",
 			Desc: "Build binaries",
 			Deps: []string{"lint", "test"},
@@ -59,7 +59,7 @@ func createPlan() *engine.Plan {
 				time.Sleep(400 * time.Millisecond)
 				return nil
 			}},
-		engine.Target{
+		engine.Task{
 			Name: "package",
 			Desc: "Package artifacts",
 			Deps: []string{"build"},
@@ -67,7 +67,7 @@ func createPlan() *engine.Plan {
 				time.Sleep(200 * time.Millisecond)
 				return nil
 			}},
-		engine.Target{
+		engine.Task{
 			Name: "all",
 			Desc: "Top-level aggregate target",
 			Deps: []string{"package"},
@@ -122,7 +122,7 @@ func runTarget(ctx context.Context, plan *engine.Plan, target string, opts ...en
 
 func main() {
 	plan := createPlan()
-	fmt.Println("Plan targets:", plan.TargetNames())
+	fmt.Println("Plan targets:", plan.TaskNames())
 	fmt.Println("Plan stages:")
 	for _, s := range plan.Stages() {
 		fmt.Println("  ", s)

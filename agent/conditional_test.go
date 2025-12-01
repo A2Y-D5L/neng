@@ -12,7 +12,7 @@ import (
 
 func TestWithCondition_True(t *testing.T) {
 	var ran bool
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			ran = true
@@ -33,7 +33,7 @@ func TestWithCondition_True(t *testing.T) {
 
 func TestWithCondition_False(t *testing.T) {
 	var ran bool
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			ran = true
@@ -57,7 +57,7 @@ func TestWithCondition_WithResults(t *testing.T) {
 	agent.Store(results, "search_hits", []string{}) // Empty results
 
 	var fallbackRan bool
-	fallback := neng.Target{
+	fallback := neng.Task{
 		Name: "fallback",
 		Run: func(_ context.Context) error {
 			fallbackRan = true
@@ -89,7 +89,7 @@ func TestWithCondition_WithResults(t *testing.T) {
 
 func TestWithCondition_Composition(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
@@ -121,7 +121,7 @@ func TestWithCondition_Composition(t *testing.T) {
 }
 
 func TestWithCondition_PreservesTargetFields(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "original",
 		Desc: "original description",
 		Deps: []string{"dep1", "dep2"},
@@ -143,7 +143,7 @@ func TestWithCondition_PreservesTargetFields(t *testing.T) {
 
 func TestWithCondition_PropagatesError(t *testing.T) {
 	expectedErr := errors.New("target error")
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			return expectedErr
@@ -163,7 +163,7 @@ func TestWithCondition_ContextPropagated(t *testing.T) {
 	cancel() // Cancel immediately
 
 	var receivedCanceled bool
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(ctx context.Context) error {
 			receivedCanceled = ctx.Err() != nil
@@ -238,7 +238,7 @@ func TestWithCondition_WithConditionFromResults(t *testing.T) {
 	agent.Store(results, "primary_results", []string{}) // Empty
 
 	var fallbackRan bool
-	fallback := neng.Target{
+	fallback := neng.Task{
 		Name: "fallback",
 		Run: func(_ context.Context) error {
 			fallbackRan = true

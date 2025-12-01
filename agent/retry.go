@@ -184,8 +184,8 @@ func (l LinearBackoff) Next(attempt int) (time.Duration, bool) {
 //	    ShouldRetry: RetryOnTimeout,
 //	    OnRetry:     func(attempt int, err error) { log.Printf("retry %d: %v", attempt, err) },
 //	})
-func WithRetry(target neng.Target, policy RetryPolicy) neng.Target {
-	return neng.Target{
+func WithRetry(target neng.Task, policy RetryPolicy) neng.Task {
+	return neng.Task{
 		Name: target.Name,
 		Desc: target.Desc,
 		Deps: target.Deps,
@@ -194,7 +194,7 @@ func WithRetry(target neng.Target, policy RetryPolicy) neng.Target {
 }
 
 // retryRunner creates the Run function for a retry-wrapped target.
-func retryRunner(target neng.Target, policy RetryPolicy) func(context.Context) error {
+func retryRunner(target neng.Task, policy RetryPolicy) func(context.Context) error {
 	return func(ctx context.Context) error {
 		var lastErr error
 

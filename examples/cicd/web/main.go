@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/a2y-d5l/neng/examples/web/backend"
+	"github.com/a2y-d5l/neng/examples/cicd/web/backend"
 )
 
 //go:embed all:frontend

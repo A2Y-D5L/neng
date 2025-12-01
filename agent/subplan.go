@@ -153,11 +153,11 @@ type prefixedHandler struct {
 }
 
 func (p *prefixedHandler) HandleEvent(ev neng.Event) {
-	if ev.Target != nil {
+	if ev.Task != nil {
 		// Create a copy with prefixed name
-		prefixedTarget := *ev.Target
-		prefixedTarget.Name = fmt.Sprintf("%s:%s", p.prefix, ev.Target.Name)
-		ev.Target = &prefixedTarget
+		prefixedTarget := *ev.Task
+		prefixedTarget.Name = fmt.Sprintf("%s:%s", p.prefix, ev.Task.Name)
+		ev.Task = &prefixedTarget
 	}
 	p.inner.HandleEvent(ev)
 }

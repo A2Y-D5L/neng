@@ -28,8 +28,8 @@ import (
 // "completed successfully" (not "skipped"). This is intentional—from the
 // executor's perspective, the target ran and returned nil. If you need to
 // track whether the actual work ran, set a flag in the Results container.
-func WithCondition(target neng.Target, condition func() bool) neng.Target {
-	return neng.Target{
+func WithCondition(target neng.Task, condition func() bool) neng.Task {
+	return neng.Task{
 		Name: target.Name,
 		Desc: target.Desc,
 		Deps: target.Deps,

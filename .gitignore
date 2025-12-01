@@ -15,9 +15,9 @@
 !**/testdata/*.json
 !**/testdata/*.yaml
 !**/testdata/*.csv
-!examples/web/frontend/**/*.js
-!examples/web/frontend/**/*.html
-!examples/web/frontend/**/*.css
+!examples/cicd/web/frontend/**/*.js
+!examples/cicd/web/frontend/**/*.html
+!examples/cicd/web/frontend/**/*.css
 
 # Allow above in all subdirectories:
 !*/

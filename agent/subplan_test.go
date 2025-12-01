@@ -13,14 +13,14 @@ func TestSubPlanExecutor_BasicExecution(t *testing.T) {
 	results := agent.NewResults()
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "step1",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "step1", "done")
 				return nil
 			},
 		},
-		neng.Target{
+		neng.Task{
 			Name: "step2",
 			Deps: []string{"step1"},
 			Run: func(_ context.Context) error {
@@ -53,7 +53,7 @@ func TestSubPlanExecutor_ContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "step1",
 			Run: func(_ context.Context) error {
 				return nil // Should not reach here
@@ -77,7 +77,7 @@ func TestSubPlanExecutor_SharedResults(t *testing.T) {
 	agent.Store(results, "input", "parent_value")
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "child",
 			Run: func(_ context.Context) error {
 				// Read from parent
@@ -103,7 +103,7 @@ func TestSubPlanExecutor_SharedResults(t *testing.T) {
 
 func TestSubPlanExecutor_FailurePropagates(t *testing.T) {
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "failing",
 			Run: func(_ context.Context) error {
 				return errors.New("sub-plan failure")
@@ -127,14 +127,14 @@ func TestSubPlanExecutor_WithRoots(t *testing.T) {
 
 	// Build a plan with two branches
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "branch_a",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "a", true)
 				return nil
 			},
 		},
-		neng.Target{
+		neng.Task{
 			Name: "branch_b",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "b", true)
@@ -167,13 +167,13 @@ func TestSubPlanExecutor_DisableFailFast(t *testing.T) {
 
 	// Two independent targets, one fails
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "fail",
 			Run: func(_ context.Context) error {
 				return errors.New("intentional failure")
 			},
 		},
-		neng.Target{
+		neng.Task{
 			Name: "succeed",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "success", true)
@@ -204,14 +204,14 @@ func TestSubPlanExecutor_CustomWorkers(t *testing.T) {
 	results := agent.NewResults()
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "a",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "a", true)
 				return nil
 			},
 		},
-		neng.Target{
+		neng.Task{
 			Name: "b",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "b", true)
@@ -252,7 +252,7 @@ func TestSubPlanExecutor_RunWithEvents(t *testing.T) {
 	handler := &testEventHandler{}
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "step1",
 			Run: func(_ context.Context) error {
 				return nil
@@ -281,7 +281,7 @@ func TestSubPlanExecutor_RunWithEventsPrefix(t *testing.T) {
 	handler := &testEventHandler{}
 
 	subPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "step1",
 			Run: func(_ context.Context) error {
 				return nil
@@ -305,7 +305,7 @@ func TestSubPlanExecutor_RunWithEventsPrefix(t *testing.T) {
 	// Events should have prefixed target names
 	found := false
 	for _, ev := range handler.events {
-		if ev.Target != nil && ev.Target.Name == "subplan:step1" {
+		if ev.Task != nil && ev.Task.Name == "subplan:step1" {
 			found = true
 			break
 		}
@@ -321,7 +321,7 @@ func TestSubPlanExecutor_NestedExecution(t *testing.T) {
 
 	// Grandchild plan
 	grandchildPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "grandchild",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "grandchild", "executed")
@@ -335,7 +335,7 @@ func TestSubPlanExecutor_NestedExecution(t *testing.T) {
 
 	// Child plan that executes grandchild
 	childPlan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "child",
 			Run: func(ctx context.Context) error {
 				agent.Store(results, "child", "executed")

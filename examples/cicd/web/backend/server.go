@@ -504,18 +504,18 @@ func (s *sseEventSink) HandleEvent(ev neng.Event) {
 		Time: ev.Time,
 	}
 
-	if ev.Target != nil {
-		clientEv.TargetName = ev.Target.Name
-		clientEv.TargetDesc = ev.Target.Desc
-		clientEv.TargetDeps = ev.Target.Deps
+	if ev.Task != nil {
+		clientEv.TargetName = ev.Task.Name
+		clientEv.TargetDesc = ev.Task.Desc
+		clientEv.TargetDeps = ev.Task.Deps
 	}
 
 	switch ev.Type {
-	case neng.EventTargetStarted:
+	case neng.EventTaskStarted:
 		clientEv.Type = "started"
-	case neng.EventTargetCompleted:
+	case neng.EventTaskCompleted:
 		clientEv.Type = "completed"
-	case neng.EventTargetSkipped:
+	case neng.EventTaskSkipped:
 		clientEv.Type = "skipped"
 	default:
 		clientEv.Type = "unknown"
@@ -550,8 +550,8 @@ func (s *sseEventSink) sendPlanInfo(plan *neng.Plan) {
 		Stages:  make([]Stage, len(stages)),
 	}
 
-	for _, name := range plan.TargetNames() {
-		t, _ := plan.Target(name)
+	for _, name := range plan.TaskNames() {
+		t, _ := plan.Task(name)
 		planInfo.Targets = append(planInfo.Targets, Target{
 			Name: t.Name,
 			Desc: t.Desc,
@@ -562,7 +562,7 @@ func (s *sseEventSink) sendPlanInfo(plan *neng.Plan) {
 	for i, stage := range stages {
 		planInfo.Stages[i] = Stage{
 			Index:   stage.Index,
-			Targets: stage.Targets,
+			Targets: stage.Tasks,
 		}
 	}
 
@@ -669,7 +669,7 @@ func (s *Server) buildPlanFromSelection(
 	targetNames []string,
 	failTargets map[string]bool,
 ) (*neng.Plan, error) {
-	targets := make([]neng.Target, 0, len(targetNames))
+	targets := make([]neng.Task, 0, len(targetNames))
 
 	// Build selectedSet once before the loop for O(n) instead of O(n²)
 	selectedSet := make(map[string]bool, len(targetNames))
@@ -695,7 +695,7 @@ func (s *Server) buildPlanFromSelection(
 		durationMin := def.DurationMin
 		durationMax := def.DurationMax
 
-		targets = append(targets, neng.Target{
+		targets = append(targets, neng.Task{
 			Name: def.Name,
 			Desc: def.Desc,
 			Deps: filteredDeps,
@@ -939,8 +939,8 @@ func (s *Server) handlePreview(w http.ResponseWriter, r *http.Request) {
 		Stages:  make([]Stage, len(stages)),
 	}
 
-	for _, name := range plan.TargetNames() {
-		t, _ := plan.Target(name)
+	for _, name := range plan.TaskNames() {
+		t, _ := plan.Task(name)
 		resp.Targets = append(resp.Targets, Target{
 			Name: t.Name,
 			Desc: t.Desc,
@@ -951,7 +951,7 @@ func (s *Server) handlePreview(w http.ResponseWriter, r *http.Request) {
 	for i, stage := range stages {
 		resp.Stages[i] = Stage{
 			Index:   stage.Index,
-			Targets: stage.Targets,
+			Targets: stage.Tasks,
 		}
 	}
 
@@ -1186,13 +1186,13 @@ func (s *Server) handleGetPlanDetails(w http.ResponseWriter, r *http.Request) {
 	for i, stage := range stages {
 		stagesInfo[i] = Stage{
 			Index:   stage.Index,
-			Targets: stage.Targets,
+			Targets: stage.Tasks,
 		}
 	}
 
 	targetsInfo := make([]Target, 0)
-	for _, name := range builtPlan.TargetNames() {
-		t, _ := builtPlan.Target(name)
+	for _, name := range builtPlan.TaskNames() {
+		t, _ := builtPlan.Task(name)
 		targetsInfo = append(targetsInfo, Target{
 			Name: t.Name,
 			Desc: t.Desc,
@@ -1219,7 +1219,7 @@ func (s *Server) determineRootTargetsFromMode(
 		if req.TargetName == "" {
 			return nil, errors.New("mode 'target' requires a non-empty 'targetName'")
 		}
-		if _, ok := builtPlan.Target(req.TargetName); !ok {
+		if _, ok := builtPlan.Task(req.TargetName); !ok {
 			return nil, fmt.Errorf("target '%s' not found in plan", req.TargetName)
 		}
 		return []string{req.TargetName}, nil
@@ -1236,7 +1236,7 @@ func (s *Server) determineRootTargetsFromMode(
 				len(stages)-1,
 			)
 		}
-		return stages[*req.StageIndex].Targets, nil
+		return stages[*req.StageIndex].Tasks, nil
 
 	case "all", "":
 		rootTargets := req.RootTargets

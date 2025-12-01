@@ -28,12 +28,12 @@ import (
 //	ctx, cancel := context.WithTimeout(parentCtx, 30*time.Second)
 //	defer cancel()
 //	exec.Run(ctx, roots...)
-func WithTimeout(target neng.Target, timeout time.Duration) neng.Target {
+func WithTimeout(target neng.Task, timeout time.Duration) neng.Task {
 	if timeout <= 0 {
 		return target
 	}
 
-	return neng.Target{
+	return neng.Task{
 		Name: target.Name,
 		Desc: target.Desc,
 		Deps: target.Deps,

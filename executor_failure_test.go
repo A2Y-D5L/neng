@@ -15,8 +15,8 @@ import (
 var noop = func(ctx context.Context) error { return nil }
 
 // failingTarget creates a target that will fail with an error.
-func failingTarget(name string, deps ...string) neng.Target {
-	return neng.Target{
+func failingTarget(name string, deps ...string) neng.Task {
+	return neng.Task{
 		Name: name,
 		Deps: deps,
 		Run: func(ctx context.Context) error {
@@ -26,8 +26,8 @@ func failingTarget(name string, deps ...string) neng.Target {
 }
 
 // successTarget creates a target that records execution and succeeds.
-func successTarget(name string, executed *[]string, mu *sync.Mutex, deps ...string) neng.Target {
-	return neng.Target{
+func successTarget(name string, executed *[]string, mu *sync.Mutex, deps ...string) neng.Task {
+	return neng.Task{
 		Name: name,
 		Deps: deps,
 		Run: func(ctx context.Context) error {
@@ -96,9 +96,9 @@ func TestTransitiveSkipping_LinearChain(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"B"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"C"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"C"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -132,9 +132,9 @@ func TestTransitiveSkipping_Diamond(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"B", "C"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"B", "C"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -164,9 +164,9 @@ func TestTransitiveSkipping_PartialGraph(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
 		successTarget("C", &executed, &mu),
-		neng.Target{Name: "D", Deps: []string{"B", "C"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"B", "C"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -199,15 +199,15 @@ func TestTransitiveSkipping_MidChainFailure(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		successTarget("A", &executed, &mu),
-		neng.Target{
+		neng.Task{
 			Name: "B",
 			Deps: []string{"A"},
 			Run: func(ctx context.Context) error {
 				return errors.New("B failed")
 			},
 		},
-		neng.Target{Name: "C", Deps: []string{"B"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"C"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"C"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -271,7 +271,7 @@ func TestFailFast_StopsNewScheduling(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{
+		neng.Task{
 			Name: "B",
 			Run: func(ctx context.Context) error {
 				time.Sleep(100 * time.Millisecond) // Slow enough to not start
@@ -281,8 +281,8 @@ func TestFailFast_StopsNewScheduling(t *testing.T) {
 				return nil
 			},
 		},
-		neng.Target{Name: "C", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"B"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -315,7 +315,7 @@ func TestNoFailFast_AllowsParallelBranches(t *testing.T) {
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
 		successTarget("B", &executed, &mu),
-		neng.Target{Name: "C", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"A"}, Run: noop},
 		successTarget("D", &executed, &mu, "B"),
 	)
 	if err != nil {
@@ -341,13 +341,13 @@ func TestTransitiveSkipping_DeepChain(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"B"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"C"}, Run: noop},
-		neng.Target{Name: "E", Deps: []string{"D"}, Run: noop},
-		neng.Target{Name: "F", Deps: []string{"E"}, Run: noop},
-		neng.Target{Name: "G", Deps: []string{"F"}, Run: noop},
-		neng.Target{Name: "H", Deps: []string{"G"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"C"}, Run: noop},
+		neng.Task{Name: "E", Deps: []string{"D"}, Run: noop},
+		neng.Task{Name: "F", Deps: []string{"E"}, Run: noop},
+		neng.Task{Name: "G", Deps: []string{"F"}, Run: noop},
+		neng.Task{Name: "H", Deps: []string{"G"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -383,11 +383,11 @@ func TestTransitiveSkipping_ComplexDiamond(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "E", Deps: []string{"B", "C", "D"}, Run: noop},
-		neng.Target{Name: "F", Deps: []string{"E"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "E", Deps: []string{"B", "C", "D"}, Run: noop},
+		neng.Task{Name: "F", Deps: []string{"E"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -418,8 +418,8 @@ func TestTransitiveSkipping_TwoIndependentChains(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"B"}, Run: noop},
 		successTarget("X", &executed, &mu),
 		successTarget("Y", &executed, &mu, "X"),
 		successTarget("Z", &executed, &mu, "Y"),
@@ -481,9 +481,9 @@ func TestTransitiveSkipping_WithRoots(t *testing.T) {
 
 	plan, err := neng.BuildPlan(
 		failingTarget("A"),
-		neng.Target{Name: "B", Deps: []string{"A"}, Run: noop},
-		neng.Target{Name: "C", Deps: []string{"B"}, Run: noop},
-		neng.Target{Name: "D", Deps: []string{"C"}, Run: noop},
+		neng.Task{Name: "B", Deps: []string{"A"}, Run: noop},
+		neng.Task{Name: "C", Deps: []string{"B"}, Run: noop},
+		neng.Task{Name: "D", Deps: []string{"C"}, Run: noop},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -512,7 +512,7 @@ func TestTransitiveSkipping_WithRoots(t *testing.T) {
 
 func TestWithCollectAllErrors_SingleFailure(t *testing.T) {
 	plan, err := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "A",
 			Run: func(_ context.Context) error {
 				return errors.New("A failed")
@@ -541,9 +541,9 @@ func TestWithCollectAllErrors_MultipleIndependentFailures(t *testing.T) {
 	errB := errors.New("B failed")
 
 	plan, err := neng.BuildPlan(
-		neng.Target{Name: "A", Run: func(_ context.Context) error { return errA }},
-		neng.Target{Name: "B", Run: func(_ context.Context) error { return errB }},
-		neng.Target{Name: "C", Run: func(_ context.Context) error { return nil }},
+		neng.Task{Name: "A", Run: func(_ context.Context) error { return errA }},
+		neng.Task{Name: "B", Run: func(_ context.Context) error { return errB }},
+		neng.Task{Name: "C", Run: func(_ context.Context) error { return nil }},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -565,8 +565,8 @@ func TestWithCollectAllErrors_MultipleIndependentFailures(t *testing.T) {
 
 func TestWithCollectAllErrors_NoFailures(t *testing.T) {
 	plan, err := neng.BuildPlan(
-		neng.Target{Name: "A", Run: func(_ context.Context) error { return nil }},
-		neng.Target{Name: "B", Run: func(_ context.Context) error { return nil }},
+		neng.Task{Name: "A", Run: func(_ context.Context) error { return nil }},
+		neng.Task{Name: "B", Run: func(_ context.Context) error { return nil }},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -585,9 +585,9 @@ func TestWithCollectAllErrors_NoFailures(t *testing.T) {
 func TestWithCollectAllErrors_DeterministicOrdering(t *testing.T) {
 	// Run multiple times and verify error message is consistent
 	plan, err := neng.BuildPlan(
-		neng.Target{Name: "Z", Run: func(_ context.Context) error { return errors.New("Z") }},
-		neng.Target{Name: "A", Run: func(_ context.Context) error { return errors.New("A") }},
-		neng.Target{Name: "M", Run: func(_ context.Context) error { return errors.New("M") }},
+		neng.Task{Name: "Z", Run: func(_ context.Context) error { return errors.New("Z") }},
+		neng.Task{Name: "A", Run: func(_ context.Context) error { return errors.New("A") }},
+		neng.Task{Name: "M", Run: func(_ context.Context) error { return errors.New("M") }},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)
@@ -624,8 +624,8 @@ func TestWithCollectAllErrors_DefaultBehavior(t *testing.T) {
 	errB := errors.New("B failed")
 
 	plan, err := neng.BuildPlan(
-		neng.Target{Name: "A", Run: func(_ context.Context) error { return errA }},
-		neng.Target{Name: "B", Run: func(_ context.Context) error { return errB }},
+		neng.Task{Name: "A", Run: func(_ context.Context) error { return errA }},
+		neng.Task{Name: "B", Run: func(_ context.Context) error { return errB }},
 	)
 	if err != nil {
 		t.Fatalf("BuildPlan: %v", err)

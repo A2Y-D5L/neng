@@ -20,7 +20,7 @@ func TestReactLoop_TerminatesOnCondition(t *testing.T) {
 		10,
 		func(_ int, r *agent.Results) *neng.Plan {
 			plan, _ := neng.BuildPlan(
-				neng.Target{
+				neng.Task{
 					Name: "iterate",
 					Run: func(_ context.Context) error {
 						n := atomic.AddInt32(&iterations, 1)
@@ -54,7 +54,7 @@ func TestReactLoop_MaxIterationsExceeded(t *testing.T) {
 		3, // Max 3 iterations
 		func(_ int, _ *agent.Results) *neng.Plan {
 			plan, _ := neng.BuildPlan(
-				neng.Target{
+				neng.Task{
 					Name: "iterate",
 					Run:  func(_ context.Context) error { return nil },
 				},
@@ -83,7 +83,7 @@ func TestReactLoop_ContextCancellation(t *testing.T) {
 		10,
 		func(_ int, _ *agent.Results) *neng.Plan {
 			plan, _ := neng.BuildPlan(
-				neng.Target{Name: "iterate", Run: func(_ context.Context) error { return nil }},
+				neng.Task{Name: "iterate", Run: func(_ context.Context) error { return nil }},
 			)
 			return plan
 		},
@@ -105,7 +105,7 @@ func TestReactLoop_IterationFailure(t *testing.T) {
 		10,
 		func(_ int, _ *agent.Results) *neng.Plan {
 			plan, _ := neng.BuildPlan(
-				neng.Target{
+				neng.Task{
 					Name: "failing",
 					Run:  func(_ context.Context) error { return iterErr },
 				},
@@ -152,7 +152,7 @@ func TestReactLoop_ReceivesIterationNumber(t *testing.T) {
 		func(iteration int, r *agent.Results) *neng.Plan {
 			receivedIterations = append(receivedIterations, iteration)
 			plan, _ := neng.BuildPlan(
-				neng.Target{
+				neng.Task{
 					Name: "iterate",
 					Run: func(_ context.Context) error {
 						agent.Store(r, "done", len(receivedIterations) >= 3)
@@ -187,7 +187,7 @@ func TestRunPhases_SequentialExecution(t *testing.T) {
 	var order []string
 
 	phase1, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "p1",
 			Run: func(_ context.Context) error {
 				order = append(order, "p1")
@@ -196,7 +196,7 @@ func TestRunPhases_SequentialExecution(t *testing.T) {
 		},
 	)
 	phase2, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "p2",
 			Run: func(_ context.Context) error {
 				order = append(order, "p2")
@@ -222,7 +222,7 @@ func TestRunPhases_StopsOnFailure(t *testing.T) {
 	var phase2Ran bool
 
 	phase1, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "failing",
 			Run: func(_ context.Context) error {
 				return errors.New("phase1 failed")
@@ -230,7 +230,7 @@ func TestRunPhases_StopsOnFailure(t *testing.T) {
 		},
 	)
 	phase2, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "p2",
 			Run: func(_ context.Context) error {
 				phase2Ran = true
@@ -267,7 +267,7 @@ func TestRunPhases_ContextCancellation(t *testing.T) {
 	cancel()
 
 	phase, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "p",
 			Run:  func(_ context.Context) error { return nil },
 		},
@@ -286,14 +286,14 @@ func TestRunPhases_WithRoots(t *testing.T) {
 	var ran []string
 
 	phase, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "a",
 			Run: func(_ context.Context) error {
 				ran = append(ran, "a")
 				return nil
 			},
 		},
-		neng.Target{
+		neng.Task{
 			Name: "b",
 			Run: func(_ context.Context) error {
 				ran = append(ran, "b")
@@ -320,7 +320,7 @@ func TestRunPhasesWithResults(t *testing.T) {
 	results := agent.NewResults()
 
 	phase, _ := neng.BuildPlan(
-		neng.Target{
+		neng.Task{
 			Name: "store",
 			Run: func(_ context.Context) error {
 				agent.Store(results, "key", "value")
@@ -417,7 +417,7 @@ func TestPlanFactory_ConditionFiltering(t *testing.T) {
 	}
 
 	// Plan should only have target "a" since "b" was filtered
-	names := plan.TargetNames()
+	names := plan.TaskNames()
 	if len(names) != 1 {
 		t.Errorf("expected 1 target, got %d", len(names))
 	}
@@ -514,7 +514,7 @@ func TestPlanFactory_DependencyFiltering(t *testing.T) {
 	}
 
 	// Plan should have only "b" with no deps (since "a" was filtered)
-	names := plan.TargetNames()
+	names := plan.TaskNames()
 	if len(names) != 1 || names[0] != "b" {
 		t.Errorf("expected only 'b', got %v", names)
 	}
@@ -536,7 +536,7 @@ func TestPlanFactory_PreservesDesc(t *testing.T) {
 		t.Fatalf("Build failed: %v", err)
 	}
 
-	target, ok := plan.Target("a")
+	target, ok := plan.Task("a")
 	if !ok {
 		t.Fatal("target 'a' not found")
 	}

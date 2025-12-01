@@ -222,7 +222,7 @@ func (f *PlanFactory) Build(names ...string) (*neng.Plan, error) {
 	}
 
 	// Second pass: build targets with filtered dependencies
-	targets := make([]neng.Target, 0, len(included))
+	targets := make([]neng.Task, 0, len(included))
 	for name := range included {
 		def := f.defs[name]
 
@@ -238,7 +238,7 @@ func (f *PlanFactory) Build(names ...string) (*neng.Plan, error) {
 		results := f.results
 		runFn := def.Run
 
-		targets = append(targets, neng.Target{
+		targets = append(targets, neng.Task{
 			Name: def.Name,
 			Desc: def.Desc,
 			Deps: filteredDeps,

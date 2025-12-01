@@ -13,7 +13,7 @@ import (
 
 func TestWithRetry_SuccessNoRetry(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
@@ -34,7 +34,7 @@ func TestWithRetry_SuccessNoRetry(t *testing.T) {
 
 func TestWithRetry_SuccessAfterTransientFailure(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			n := atomic.AddInt32(&attempts, 1)
@@ -62,7 +62,7 @@ func TestWithRetry_SuccessAfterTransientFailure(t *testing.T) {
 func TestWithRetry_MaxRetriesExhausted(t *testing.T) {
 	var attempts int32
 	errFail := errors.New("always fails")
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
@@ -86,7 +86,7 @@ func TestWithRetry_MaxRetriesExhausted(t *testing.T) {
 
 func TestWithRetry_ZeroMaxRetries(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
@@ -107,7 +107,7 @@ func TestWithRetry_ShouldRetryPredicate(t *testing.T) {
 	errFatal := errors.New("fatal")
 
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			n := atomic.AddInt32(&attempts, 1)
@@ -138,7 +138,7 @@ func TestWithRetry_ShouldRetryPredicate(t *testing.T) {
 
 func TestWithRetry_OnRetryCallback(t *testing.T) {
 	var callbacks []int
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			return errors.New("fail")
@@ -167,7 +167,7 @@ func TestWithRetry_OnRetryCallback(t *testing.T) {
 }
 
 func TestWithRetry_PreservesTargetMetadata(t *testing.T) {
-	target := neng.Target{
+	target := neng.Task{
 		Name: "original",
 		Desc: "Original description",
 		Deps: []string{"dep1", "dep2"},
@@ -336,7 +336,7 @@ func TestWithRetry_ContextCancelledBeforeFirstAttempt(t *testing.T) {
 	cancel() // Cancel immediately
 
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
@@ -359,7 +359,7 @@ func TestWithRetry_ContextCancelledDuringBackoff(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			n := atomic.AddInt32(&attempts, 1)
@@ -477,7 +477,7 @@ func TestRetryOn_WrappedErrors(t *testing.T) {
 // Integration test: No backoff (immediate retry)
 func TestWithRetry_NoBackoff(t *testing.T) {
 	var attempts int32
-	target := neng.Target{
+	target := neng.Task{
 		Name: "test",
 		Run: func(_ context.Context) error {
 			atomic.AddInt32(&attempts, 1)
