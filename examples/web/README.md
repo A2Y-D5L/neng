@@ -18,7 +18,7 @@ A real-time, visually-rich web-based UI for rendering events, results, and summa
 ## Project Structure
 
 ```text
-wip/examples/clients/web/
+examples/web/
 ├── main.go              # Entry point - embeds frontend, runs backend
 ├── README.md            # This file
 ├── backend/
@@ -90,8 +90,7 @@ wip/examples/clients/web/
 ## Running the Server
 
 ```bash
-# From the web directory
-cd wip/examples/clients/web
+# From the examples/web directory
 go run .
 
 # Or build and run
