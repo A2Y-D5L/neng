@@ -1,0 +1,23 @@
+# Default Deny:
+*
+
+# Allow List:
+!.gitignore
+!.golangci.yml
+!go.mod
+!go.sum
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE
+!README.md
+!docs/**/*.md
+!*.go
+!**/testdata/*.json
+!**/testdata/*.yaml
+!**/testdata/*.csv
+
+# Allow above in all subdirectories:
+!*/
+
+# Exceptions for allowed files:
+vendor/
