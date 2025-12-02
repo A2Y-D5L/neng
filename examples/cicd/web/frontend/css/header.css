@@ -28,10 +28,51 @@
     color: var(--accent-blue);
 }
 
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.logo-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple, #a855f7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.logo-motto {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
 .logo h1 {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+/* Example Label */
+.header-example {
+    display: flex;
+    align-items: center;
+}
+
+.example-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
 }
 
 /* Connection status */

@@ -34,13 +34,11 @@ func TestStreamingTarget_BasicFlow(t *testing.T) {
 	// Start consumer before plan execution
 	var received bytes.Buffer
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for chunk := range output {
 			received.Write(chunk)
 		}
-	}()
+	})
 
 	// Execute target directly (no plan needed for this test)
 	err := target.Run(context.Background())
@@ -64,7 +62,7 @@ func TestStreamingTarget_ContextCancellation(t *testing.T) {
 		"",
 		nil,
 		func(ctx context.Context, emit func([]byte)) error {
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -80,13 +78,11 @@ func TestStreamingTarget_ContextCancellation(t *testing.T) {
 	// Consumer
 	received := 0
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range output {
 			received++
 		}
-	}()
+	})
 
 	// Cancel after a short time
 	go func() {
@@ -119,13 +115,11 @@ func TestStreamingTarget_ChannelClosedOnError(t *testing.T) {
 
 	var received [][]byte
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for chunk := range output {
 			received = append(received, chunk)
 		}
-	}()
+	})
 
 	err := target.Run(context.Background())
 	wg.Wait()
@@ -149,7 +143,7 @@ func TestStreamingTarget_NoGoroutineLeak(t *testing.T) {
 		nil,
 		func(_ context.Context, emit func([]byte)) error {
 			// Emit many chunks with no consumer
-			for i := 0; i < 1000; i++ {
+			for i := range 1000 {
 				emit([]byte{byte(i)})
 			}
 			return nil
@@ -206,13 +200,11 @@ func TestBlockingStreamingTarget_BasicFlow(t *testing.T) {
 
 	var received bytes.Buffer
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for chunk := range output {
 			received.Write(chunk)
 		}
-	}()
+	})
 
 	err := target.Run(context.Background())
 	wg.Wait()
@@ -234,7 +226,7 @@ func TestBlockingStreamingTarget_SlowConsumer(t *testing.T) {
 		"",
 		nil,
 		func(_ context.Context, emit func([]byte)) error {
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				emit([]byte{byte(i)})
 				emitted++
 			}
@@ -244,14 +236,12 @@ func TestBlockingStreamingTarget_SlowConsumer(t *testing.T) {
 
 	received := 0
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range output {
 			time.Sleep(1 * time.Millisecond) // Slow consumer
 			received++
 		}
-	}()
+	})
 
 	err := target.Run(context.Background())
 	wg.Wait()
@@ -273,7 +263,7 @@ func TestBlockingStreamingTarget_ContextCancellation(t *testing.T) {
 		"",
 		nil,
 		func(ctx context.Context, emit func([]byte)) error {
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -288,13 +278,11 @@ func TestBlockingStreamingTarget_ContextCancellation(t *testing.T) {
 
 	received := 0
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range output {
 			received++
 		}
-	}()
+	})
 
 	go func() {
 		time.Sleep(50 * time.Millisecond)
@@ -322,12 +310,10 @@ func TestStreamingTarget_NilDeps(t *testing.T) {
 	)
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range output {
 		}
-	}()
+	})
 
 	err := target.Run(context.Background())
 	wg.Wait()
@@ -353,13 +339,11 @@ func TestStreamingTarget_EmptyOutput(t *testing.T) {
 
 	received := 0
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for range output {
 			received++
 		}
-	}()
+	})
 
 	err := target.Run(context.Background())
 	wg.Wait()

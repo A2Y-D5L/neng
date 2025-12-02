@@ -192,7 +192,7 @@ func TestWithRetry_PreservesTargetMetadata(t *testing.T) {
 func TestConstantBackoff(t *testing.T) {
 	backoff := agent.ConstantBackoff{Delay: 100 * time.Millisecond}
 
-	for attempt := 0; attempt < 5; attempt++ {
+	for attempt := range 5 {
 		delay, cont := backoff.Next(attempt)
 		if !cont {
 			t.Errorf("expected shouldContinue=true")

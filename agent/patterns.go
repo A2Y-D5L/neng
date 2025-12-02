@@ -47,7 +47,7 @@ func ReactLoop(
 	buildIterationPlan func(iteration int, results *Results) *neng.Plan,
 	isDone func(results *Results) bool,
 ) error {
-	for i := 0; i < maxIterations; i++ {
+	for i := range maxIterations {
 		// Check context before each iteration
 		if err := ctx.Err(); err != nil {
 			return err
