@@ -10,7 +10,11 @@ import (
 
 func TestBuildPlan_ValidatesAndStagesDeterministic(t *testing.T) {
 	p, err := neng.BuildPlan(
-		neng.Task{Name: "C", Deps: []string{"A", "B"}, Run: func(context.Context) error { return nil }},
+		neng.Task{
+			Name: "C",
+			Deps: []string{"A", "B"},
+			Run:  func(context.Context) error { return nil },
+		},
 		neng.Task{Name: "B", Run: func(context.Context) error { return nil }},
 		neng.Task{Name: "A", Run: func(context.Context) error { return nil }},
 	)
